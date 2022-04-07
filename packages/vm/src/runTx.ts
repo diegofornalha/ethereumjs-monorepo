@@ -313,8 +313,8 @@ async function _runTx(this: VM, opts: RunTxOpts): Promise<RunTxResult> {
     throw new Error(msg)
   }
 
+  const cost = tx.getUpfrontCost(block.header.baseFeePerGas)
   if (!opts.skipBalance) {
-    const cost = tx.getUpfrontCost(block.header.baseFeePerGas)
     if (balance < cost) {
       const msg = _errorMsg(
         `sender doesn't have enough funds to send tx. The upfront cost is: ${cost} and the sender's account (${caller}) only has: ${balance}`,
@@ -324,6 +324,7 @@ async function _runTx(this: VM, opts: RunTxOpts): Promise<RunTxResult> {
       )
       throw new Error(msg)
     }
+
     if (tx.supports(Capability.EIP1559FeeMarket)) {
       // EIP-1559 spec:
       // The signer must be able to afford the transaction
@@ -339,6 +340,9 @@ async function _runTx(this: VM, opts: RunTxOpts): Promise<RunTxResult> {
         throw new Error(msg)
       }
     }
+  } else {
+    fromAccount.balance += cost - balance
+    await this.stateManager.putAccount(caller, fromAccount)
   }
   if (!opts.skipNonce) {
     if (nonce !== tx.nonce) {
