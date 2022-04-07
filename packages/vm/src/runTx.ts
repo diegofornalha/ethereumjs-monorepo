@@ -316,7 +316,7 @@ async function _runTx(this: VM, opts: RunTxOpts): Promise<RunTxResult> {
   const cost = tx.getUpfrontCost(block.header.baseFeePerGas)
   if (opts.skipBalance) {
     // when skipBalance, ensure the caller has enough balance for the total tx cost
-    fromAccount.balance += cost - balance
+    fromAccount.balance += cost
     await this.stateManager.putAccount(caller, fromAccount)
   } else {
     if (balance < cost) {
